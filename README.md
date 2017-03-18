@@ -1,6 +1,5 @@
-# YEPS body parser
+# YEPS Method Override
 
-Parse request bodies
 
 [![NPM](https://nodei.co/npm/yeps-method-override.png)](https://npmjs.org/package/yeps-method-override)
 
