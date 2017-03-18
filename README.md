@@ -32,6 +32,7 @@ Parse request bodies
     const App = require('yeps');
     const app = new App();
     
+    const bodyParser = require('yeps-bodyparser');
     const methodOverride = require('yeps-method-override');
     
     app.then(bodyParser());
