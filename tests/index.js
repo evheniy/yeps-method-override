@@ -1,155 +1,193 @@
 const App = require('yeps');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
-const http = require('http');
+const srv = require('yeps-server');
+const Router = require('yeps-router');
 const bodyParser = require('yeps-bodyparser');
 const methodOverride = require('..');
-const expect = chai.expect;
+
 const wrapper = require('yeps-express-wrapper');
 const expressBodyParser = require('body-parser');
 
+const { expect } = chai;
+
 chai.use(chaiHttp);
 let app;
+let server;
 
 describe('YEPS method override test', async () => {
+  beforeEach(() => {
+    app = new App();
+    server = srv.createHttpServer(app);
+  });
 
-    beforeEach(() => {
-        app = new App();
+  afterEach(() => {
+    server.close();
+  });
+
+  it('should test origin method', async () => {
+    let isTestFinished1 = false;
+    let isTestFinished2 = false;
+
+    app.then(async (ctx) => {
+      isTestFinished1 = true;
+
+      ctx.res.statusCode = 200;
+      ctx.res.end(ctx.req.method);
     });
 
-    it('should test origin method', async () => {
-        let isTestFinished1 = false;
-        let isTestFinished2 = false;
+    await chai.request(server)
+      .get('/')
+      .send()
+      .then((res) => {
+        expect(res).to.have.status(200);
+        expect(res.text).to.be.equal('GET');
+        isTestFinished2 = true;
+      });
 
-        app.then(async ctx => {
-            isTestFinished1 = true;
+    expect(isTestFinished1).is.true;
+    expect(isTestFinished2).is.true;
+  });
 
-            ctx.res.statusCode = 200;
-            ctx.res.end(ctx.req.method);
-        });
+  it('should test yeps body parser json', async () => {
+    let isTestFinished1 = false;
+    let isTestFinished2 = false;
 
-        await chai.request(http.createServer(app.resolve()))
-            .get('/')
-            .send()
-            .then(res => {
-                expect(res).to.have.status(200);
-                expect(res.text).to.be.equal('GET');
-                isTestFinished2 = true;
-            });
+    app.then(bodyParser());
+    app.then(methodOverride());
 
-        expect(isTestFinished1).is.true;
-        expect(isTestFinished2).is.true;
+    app.then(async (ctx) => {
+      isTestFinished1 = true;
+
+      ctx.res.statusCode = 200;
+      ctx.res.end(ctx.req.method);
     });
 
-    it('should test yeps body parser json', async () => {
-        let isTestFinished1 = false;
-        let isTestFinished2 = false;
+    await chai.request(server)
+      .get('/')
+      .type('json')
+      .send({ _method: 'post' })
+      .then((res) => {
+        expect(res).to.have.status(200);
+        expect(res.text).to.be.equal('POST');
+        isTestFinished2 = true;
+      });
 
-        app.then(bodyParser());
-        app.then(methodOverride());
+    expect(isTestFinished1).is.true;
+    expect(isTestFinished2).is.true;
+  });
 
-        app.then(async ctx => {
-            isTestFinished1 = true;
+  it('should test yeps body parser', async () => {
+    let isTestFinished1 = false;
+    let isTestFinished2 = false;
 
-            ctx.res.statusCode = 200;
-            ctx.res.end(ctx.req.method);
-        });
+    app.then(bodyParser());
+    app.then(methodOverride());
 
-        await chai.request(http.createServer(app.resolve()))
-            .get('/')
-            .type('json')
-            .send({ _method: 'post'})
-            .then(res => {
-                expect(res).to.have.status(200);
-                expect(res.text).to.be.equal('POST');
-                isTestFinished2 = true;
-            });
+    app.then(async (ctx) => {
+      isTestFinished1 = true;
 
-        expect(isTestFinished1).is.true;
-        expect(isTestFinished2).is.true;
+      ctx.res.statusCode = 200;
+      ctx.res.end(ctx.req.method);
     });
 
-    it('should test yeps body parser', async () => {
-        let isTestFinished1 = false;
-        let isTestFinished2 = false;
+    await chai.request(server)
+      .get('/')
+      .type('form')
+      .send({ _method: 'post' })
+      .then((res) => {
+        expect(res).to.have.status(200);
+        expect(res.text).to.be.equal('POST');
+        isTestFinished2 = true;
+      });
 
-        app.then(bodyParser());
-        app.then(methodOverride());
+    expect(isTestFinished1).is.true;
+    expect(isTestFinished2).is.true;
+  });
 
-        app.then(async ctx => {
-            isTestFinished1 = true;
+  it('should test express body parser json', async () => {
+    let isTestFinished1 = false;
+    let isTestFinished2 = false;
 
-            ctx.res.statusCode = 200;
-            ctx.res.end(ctx.req.method);
-        });
+    app.then(wrapper(expressBodyParser.json()));
+    app.then(methodOverride());
 
-        await chai.request(http.createServer(app.resolve()))
-            .get('/')
-            .type('form')
-            .send({ _method: 'post'})
-            .then(res => {
-                expect(res).to.have.status(200);
-                expect(res.text).to.be.equal('POST');
-                isTestFinished2 = true;
-            });
+    app.then(async (ctx) => {
+      isTestFinished1 = true;
 
-        expect(isTestFinished1).is.true;
-        expect(isTestFinished2).is.true;
+      ctx.res.statusCode = 200;
+      ctx.res.end(ctx.req.method);
     });
 
-    it('should test express body parser json', async () => {
-        let isTestFinished1 = false;
-        let isTestFinished2 = false;
+    await chai.request(server)
+      .get('/')
+      .type('json')
+      .send({ _method: 'post' })
+      .then((res) => {
+        expect(res).to.have.status(200);
+        expect(res.text).to.be.equal('POST');
+        isTestFinished2 = true;
+      });
 
-        app.then(wrapper(expressBodyParser.json()));
-        app.then(methodOverride());
+    expect(isTestFinished1).is.true;
+    expect(isTestFinished2).is.true;
+  });
 
-        app.then(async ctx => {
-            isTestFinished1 = true;
+  it('should test header', async () => {
+    let isTestFinished1 = false;
+    let isTestFinished2 = false;
 
-            ctx.res.statusCode = 200;
-            ctx.res.end(ctx.req.method);
-        });
+    app.then(methodOverride());
 
-        await chai.request(http.createServer(app.resolve()))
-            .get('/')
-            .type('json')
-            .send({ _method: 'post'})
-            .then(res => {
-                expect(res).to.have.status(200);
-                expect(res.text).to.be.equal('POST');
-                isTestFinished2 = true;
-            });
+    app.then(async (ctx) => {
+      isTestFinished1 = true;
 
-        expect(isTestFinished1).is.true;
-        expect(isTestFinished2).is.true;
+      ctx.res.statusCode = 200;
+      ctx.res.end(ctx.req.method);
     });
 
-    it('should test header', async () => {
-        let isTestFinished1 = false;
-        let isTestFinished2 = false;
+    await chai.request(server)
+      .get('/')
+      .set('x-http-method-override', 'post')
+      .send({ _method: 'post' })
+      .then((res) => {
+        expect(res).to.have.status(200);
+        expect(res.text).to.be.equal('POST');
+        isTestFinished2 = true;
+      });
 
-        app.then(methodOverride());
+    expect(isTestFinished1).is.true;
+    expect(isTestFinished2).is.true;
+  });
 
-        app.then(async ctx => {
-            isTestFinished1 = true;
+  it('should test yeps router', async () => {
+    let isTestFinished1 = false;
+    let isTestFinished2 = false;
 
-            ctx.res.statusCode = 200;
-            ctx.res.end(ctx.req.method);
-        });
+    app.then(methodOverride());
 
-        await chai.request(http.createServer(app.resolve()))
-            .get('/')
-            .set('x-http-method-override', 'post')
-            .send({ _method: 'post'})
-            .then(res => {
-                expect(res).to.have.status(200);
-                expect(res.text).to.be.equal('POST');
-                isTestFinished2 = true;
-            });
+    const router = new Router();
 
-        expect(isTestFinished1).is.true;
-        expect(isTestFinished2).is.true;
+    router.post('/').then(async (ctx) => {
+      isTestFinished1 = true;
+
+      ctx.res.statusCode = 200;
+      ctx.res.end(ctx.req.method);
     });
 
+    app.then(router.resolve());
+
+    await chai.request(server)
+      .get('/')
+      .set('x-http-method-override', 'post')
+      .send({ _method: 'post' })
+      .then((res) => {
+        expect(res).to.have.status(200);
+        expect(res.text).to.be.equal('POST');
+        isTestFinished2 = true;
+      });
+
+    expect(isTestFinished1).is.true;
+    expect(isTestFinished2).is.true;
+  });
 });

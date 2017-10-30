@@ -22,53 +22,45 @@
 
 ## How to install
 
-  npm i -S yeps-method-override
+    npm i -S yeps-method-override
   
 ## How to use
 
 ### Header x-http-method-override or in body request
 
     const App = require('yeps');
-    const app = new App();
+    const Router = require('yeps-router');
+    
+    const error = require('yeps-error');
+    const logger = require('yeps-logger');
+    const server = require('yeps-server');
     
     const bodyParser = require('yeps-bodyparser');
     const methodOverride = require('yeps-method-override');
     
-    app.then(bodyParser());
-    app.then(methodOverride());
+    const app = new App();
+    const router = new Router();
     
-    app.then(async ctx => {
-        
+    app.all([
+        error(),
+        logger(),
+        bodyParser(),
+        methodOverride(),
+    ]);
+    
+    app.then(async (ctx) => {
         ctx.res.statusCode = 200;
         ctx.res.end(JSON.stringify(ctx.req.method));
-    
     });
     
-### Express body parser
-
-    const wrapper = require('yeps-express-wrapper');
-    const expressBodyParser = require('body-parser');
-    
-    app.then(wrapper(expressBodyParser.json()));
-    app.then(methodOverride());
-    
-    app.then(async ctx => {
-            
-        ctx.res.statusCode = 200;
-        ctx.res.end(JSON.stringify(ctx.req.method));
+    router.get('/').then(async (ctx) => {
+       ctx.res.statusCode = 200;
+       ctx.res.end('homepage');     
+    });
         
-    });
-                
-## Links
+    app.then(router.resolve());
+        
+    server.createHttpServer(app);
 
-* [yeps](https://github.com/evheniy/yeps) - YEPS
-* [yeps-promisify](https://github.com/evheniy/yeps-promisify) - YEPS kernel
-* [yeps-benchmark](https://github.com/evheniy/yeps-benchmark) - performance comparison koa2, express and node http
-* [yeps-router](https://github.com/evheniy/yeps-router) - YEPS promise based router
-* [yeps-error](https://github.com/evheniy/yeps-error) - YEPS 404/500 error handler
-* [yeps-redis](https://github.com/evheniy/yeps-redis) - YEPS promise based redis client
-* [yeps-mysql](https://github.com/evheniy/yeps-mysql) - YEPS promise based mysql client
-* [yeps-boilerplate](https://github.com/evheniy/yeps-boilerplate) - YEPS app boilerplate
-* [yeps-express-wrapper](https://github.com/evheniy/yeps-express-wrapper) - YEPS express wrapper
-* [yeps-cors](https://github.com/evheniy/yeps-cors) - YEPS CORS
-* [yeps-bodyparser](https://github.com/evheniy/yeps-bodyparser) - YEPS body parser
+
+#### [YEPS documentation](http://yeps.info/)
