@@ -31,7 +31,7 @@ module.exports = () => async (context) => {
   }
 
   // header support
-  const header = context.req.headers['x-http-method-override'];
+  const header = context.req.headers['x-http-method-override'] || context.req.headers['access-control-request-method'];
 
   if (header && methodExists(header)) {
     method = header.toUpperCase();

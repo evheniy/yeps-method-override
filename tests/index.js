@@ -133,7 +133,7 @@ describe('YEPS method override test', async () => {
     expect(isTestFinished2).is.true;
   });
 
-  it('should test header', async () => {
+  it('should test header: x-http-method-override', async () => {
     let isTestFinished1 = false;
     let isTestFinished2 = false;
 
@@ -150,6 +150,33 @@ describe('YEPS method override test', async () => {
       .get('/')
       .set('x-http-method-override', 'post')
       .send({ _method: 'post' })
+      .then((res) => {
+        expect(res).to.have.status(200);
+        expect(res.text).to.be.equal('POST');
+        isTestFinished2 = true;
+      });
+
+    expect(isTestFinished1).is.true;
+    expect(isTestFinished2).is.true;
+  });
+
+  it('should test header: access-control-request-method', async () => {
+    let isTestFinished1 = false;
+    let isTestFinished2 = false;
+
+    app.then(methodOverride());
+
+    app.then(async (ctx) => {
+      isTestFinished1 = true;
+
+      ctx.res.statusCode = 200;
+      ctx.res.end(ctx.req.method);
+    });
+
+    await chai.request(server)
+      .get('/')
+      .set('access-control-request-method', 'post')
+      .send()
       .then((res) => {
         expect(res).to.have.status(200);
         expect(res.text).to.be.equal('POST');
